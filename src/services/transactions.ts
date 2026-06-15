@@ -2,6 +2,9 @@ import { createClient } from "@/lib/supabase/client";
 import type {
   Transaction, TransactionWithCategory, TransactionFilters, SortField, SortDir,
 } from "@/types";
+import type { Database } from "@/types/database";
+
+type TxInsert = Database["public"]["Tables"]["transactions"]["Insert"];
 import type { TransactionInput } from "@/lib/validations";
 
 const TABLE = "transactions";
@@ -91,7 +94,7 @@ export async function duplicateTransaction(tx: Transaction, userId: string): Pro
   return data as Transaction;
 }
 
-export async function bulkInsert(rows: Record<string, unknown>[]): Promise<number> {
+export async function bulkInsert(rows: TxInsert[]): Promise<number> {
   const supabase = createClient();
   const { data, error } = await supabase.from(TABLE).insert(rows).select("id");
   if (error) throw error;

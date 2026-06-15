@@ -1,0 +1,4 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["src/_probe.ts", "src/types/database.ts"]
+}

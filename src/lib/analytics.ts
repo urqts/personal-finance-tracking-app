@@ -2,6 +2,7 @@ import { format, parseISO, startOfMonth, subMonths, isWithinInterval, startOfYea
 import type {
   Transaction, TransactionWithCategory, Category, Subscription,
   DashboardSummary, MonthlyTrendPoint, CategoryBreakdownPoint, BillingCycle,
+  SavingJar, JarCategorySummary, JarCategory,
 } from "@/types";
 import { BILLING_CYCLES } from "./constants";
 
@@ -113,4 +114,52 @@ export function financialHealthScore(opts: {
   const clamped = Math.max(0, Math.min(100, score));
   const label = clamped >= 75 ? "Excellent" : clamped >= 50 ? "Good" : clamped >= 30 ? "Fair" : "Needs work";
   return { score: clamped, label };
+}
+
+
+const JAR_LABELS: Record<JarCategory, { label: string; color: string }> = {
+  emergency: { label: "Emergency", color: "#ef4444" },
+  travel: { label: "Travel", color: "#0ea5e9" },
+  home: { label: "Home", color: "#f97316" },
+  education: { label: "Education", color: "#6366f1" },
+  gadgets: { label: "Gadgets", color: "#8b5cf6" },
+  vehicle: { label: "Vehicle", color: "#14b8a6" },
+  health: { label: "Health", color: "#06b6d4" },
+  gifts: { label: "Gifts", color: "#ec4899" },
+  other: { label: "Other", color: "#64748b" },
+};
+
+export function jarCategorySummaries(jars: SavingJar[]): JarCategorySummary[] {
+  const map = new Map<JarCategory, JarCategorySummary>();
+  for (const jar of jars) {
+    const meta = JAR_LABELS[jar.category];
+    const existing = map.get(jar.category);
+    if (existing) {
+      existing.jarCount += 1;
+      existing.saved += Number(jar.current_amount);
+      existing.target += Number(jar.target_amount);
+    } else {
+      map.set(jar.category, {
+        category: jar.category,
+        label: meta.label,
+        color: meta.color,
+        jarCount: 1,
+        saved: Number(jar.current_amount),
+        target: Number(jar.target_amount),
+        percentage: 0,
+      });
+    }
+  }
+  const arr = [...map.values()];
+  arr.forEach((s) => (s.percentage = s.target > 0 ? (s.saved / s.target) * 100 : 0));
+  return arr.sort((a, b) => b.saved - a.saved);
+}
+
+export function totalSaved(jars: SavingJar[]): number {
+  return sum(jars.map((j) => Number(j.current_amount)));
+}
+
+export function jarsOverallProgress(jars: SavingJar[]): number {
+  if (jars.length === 0) return 0;
+  return (sum(jars.map((j) => (j.target_amount > 0 ? Math.min(Number(j.current_amount) / Number(j.target_amount), 1) : 0))) / jars.length) * 100;
 }

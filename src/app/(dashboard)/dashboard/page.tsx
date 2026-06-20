@@ -6,6 +6,7 @@ import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { IncomeExpenseChart } from "@/components/dashboard/income-expense-chart";
 import { CategoryBreakdownChart } from "@/components/dashboard/category-breakdown";
 import { BudgetProgress } from "@/components/dashboard/budget-progress";
+import { JarsProgress } from "@/components/dashboard/jars-progress";
 import { SavingsProgress } from "@/components/dashboard/savings-progress";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -51,10 +52,11 @@ export default function DashboardPage() {
             </div>
             <div className="grid gap-6 lg:grid-cols-3">
               <RecentTransactions transactions={data.transactions} currency={currency} locale={locale} />
-              <SavingsProgress goals={data.goals} currency={currency} locale={locale} />
+              <JarsProgress jars={data.jars} currency={currency} locale={locale} />
             </div>
             <div className="grid gap-6 lg:grid-cols-2">
               <BudgetProgress budgets={data.budgets} transactions={data.transactions} currency={currency} locale={locale} />
+              <SavingsProgress goals={data.goals} currency={currency} locale={locale} />
             </div>
           </>
         )}

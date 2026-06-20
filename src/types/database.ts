@@ -3,6 +3,8 @@ export type TransactionType = "income" | "expense";
 export type RecurrenceInterval = "none" | "daily" | "weekly" | "monthly" | "yearly";
 export type BillingCycle = "weekly" | "monthly" | "quarterly" | "yearly";
 export type BudgetPeriod = "monthly" | "yearly";
+export type JarCategory = "emergency" | "travel" | "home" | "education" | "gadgets" | "vehicle" | "health" | "gifts" | "other";
+export type JarMovement = "deposit" | "withdraw";
 
 type Timestamps = { created_at: string; updated_at: string };
 
@@ -98,6 +100,25 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      saving_jars: {
+        Row: {
+          id: string; user_id: string; name: string; category: JarCategory;
+          target_amount: number; current_amount: number; color: string;
+          icon: string; is_completed: boolean;
+        } & Timestamps;
+        Insert: { user_id: string; name: string; target_amount: number } & Partial<{ category: JarCategory; current_amount: number; color: string; icon: string; is_completed: boolean }>;
+        Update: Partial<{ name: string; category: JarCategory; target_amount: number; current_amount: number; color: string; icon: string; is_completed: boolean }>;
+        Relationships: [];
+      };
+      jar_transactions: {
+        Row: {
+          id: string; jar_id: string; user_id: string; type: JarMovement;
+          amount: number; note: string | null; transaction_id: string | null; created_at: string;
+        };
+        Insert: { jar_id: string; user_id: string; type: JarMovement; amount: number } & Partial<{ note: string | null; transaction_id: string | null }>;
+        Update: Partial<{ note: string | null; transaction_id: string | null }>;
+        Relationships: [];
+      };
     };
     Views: { [_ in never]: never };
     Functions: { [_ in never]: never };
@@ -107,6 +128,8 @@ export interface Database {
       recurrence_interval: RecurrenceInterval;
       billing_cycle: BillingCycle;
       budget_period: BudgetPeriod;
+      jar_category: JarCategory;
+      jar_movement: JarMovement;
     };
   };
 }

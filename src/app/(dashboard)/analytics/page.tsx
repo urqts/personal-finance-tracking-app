@@ -13,7 +13,7 @@ import { useFinanceData } from "@/hooks/use-finance-data";
 import { usePreferences } from "@/hooks/use-preferences";
 import {
   monthlyTrend, topCategories, averageMonthlySpending, yearlyTotals,
-  financialHealthScore, computeSummary, subscriptionMonthlyTotal,
+  financialHealthScore, computeSummary, subscriptionMonthlyTotal, jarsOverallProgress,
 } from "@/lib/analytics";
 import { formatCompact, formatCurrency, formatPercent } from "@/lib/format";
 
@@ -27,10 +27,7 @@ export default function AnalyticsPage() {
   const year = useMemo(() => yearlyTotals(data.transactions), [data.transactions]);
   const monthlyBudget = useMemo(() => data.budgets.filter((b) => b.is_active && b.period === "monthly").reduce((a, b) => a + Number(b.amount), 0), [data.budgets]);
   const summary = useMemo(() => computeSummary(data.transactions, monthlyBudget), [data.transactions, monthlyBudget]);
-  const goalProgress = useMemo(() => {
-    if (data.goals.length === 0) return 0;
-    return (data.goals.reduce((a, g) => a + (g.target_amount > 0 ? Math.min(Number(g.current_amount) / Number(g.target_amount), 1) : 0), 0) / data.goals.length) * 100;
-  }, [data.goals]);
+  const goalProgress = useMemo(() => jarsOverallProgress(data.jars), [data.jars]);
   const health = useMemo(() => financialHealthScore({ savingsRate: summary.savingsRate, budgetUtilization: summary.budgetUtilization, goalProgress }), [summary, goalProgress]);
 
   const tip = { background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 };
@@ -60,7 +57,7 @@ export default function AnalyticsPage() {
             <div className="flex-1 space-y-3">
               <Metric label="Savings rate" pct={Math.max(0, Math.min(100, summary.savingsRate))} />
               <Metric label="Budget adherence" pct={Math.max(0, 100 - Math.max(0, summary.budgetUtilization - 100))} />
-              <Metric label="Goal progress" pct={goalProgress} />
+              <Metric label="Jar progress" pct={goalProgress} />
             </div>
           </CardContent>
         </Card>

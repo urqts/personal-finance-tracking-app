@@ -1,6 +1,6 @@
 import ExcelJS from "exceljs";
 import type {
-  TransactionWithCategory, Budget, SavingsGoal, Subscription,
+  TransactionWithCategory, Budget, SavingsGoal, SavingJar, Subscription,
 } from "@/types";
 import { monthlyTrend, categoryBreakdown, subscriptionMonthlyTotal } from "./analytics";
 
@@ -48,12 +48,13 @@ export interface ExportPayload {
   transactions?: TransactionWithCategory[];
   budgets?: Budget[];
   goals?: SavingsGoal[];
+  jars?: SavingJar[];
   subscriptions?: Subscription[];
   currency?: string;
 }
 
 export type ExportKind =
-  | "transactions" | "budgets" | "goals" | "subscriptions" | "analytics" | "full";
+  | "transactions" | "budgets" | "goals" | "jars" | "subscriptions" | "analytics" | "full";
 
 function sheetTransactions(wb: ExcelJS.Workbook, txns: TransactionWithCategory[]) {
   const ws = wb.addWorksheet("Transactions");
@@ -105,6 +106,25 @@ function sheetGoals(wb: ExcelJS.Workbook, goals: SavingsGoal[]) {
   ws.getColumn(3).numFmt = "#,##0.00";
 }
 
+function sheetJars(wb: ExcelJS.Workbook, jars: SavingJar[]) {
+  const ws = wb.addWorksheet("Saving Jars");
+  addTable(
+    ws,
+    "Jars",
+    ["Name", "Category", "Target", "Saved", "Progress %", "Funded"],
+    jars.map((j) => [
+      j.name,
+      j.category,
+      Number(j.target_amount),
+      Number(j.current_amount),
+      j.target_amount > 0 ? Math.round((Number(j.current_amount) / Number(j.target_amount)) * 100) : 0,
+      j.is_completed ? "Yes" : "No",
+    ])
+  );
+  ws.getColumn(3).numFmt = "#,##0.00";
+  ws.getColumn(4).numFmt = "#,##0.00";
+}
+
 function sheetSubscriptions(wb: ExcelJS.Workbook, subs: Subscription[]) {
   const ws = wb.addWorksheet("Subscriptions");
   addTable(
@@ -143,17 +163,20 @@ export async function buildWorkbook(kind: ExportKind, data: ExportPayload): Prom
   const txns = data.transactions ?? [];
   const budgets = data.budgets ?? [];
   const goals = data.goals ?? [];
+  const jars = data.jars ?? [];
   const subs = data.subscriptions ?? [];
 
   if (kind === "transactions") sheetTransactions(wb, txns);
   else if (kind === "budgets") sheetBudgets(wb, budgets);
   else if (kind === "goals") sheetGoals(wb, goals);
+  else if (kind === "jars") sheetJars(wb, jars);
   else if (kind === "subscriptions") sheetSubscriptions(wb, subs);
   else if (kind === "analytics") sheetAnalytics(wb, txns, subs);
   else {
     sheetTransactions(wb, txns);
     sheetBudgets(wb, budgets);
     sheetGoals(wb, goals);
+    sheetJars(wb, jars);
     sheetSubscriptions(wb, subs);
     sheetAnalytics(wb, txns, subs);
   }

@@ -12,6 +12,7 @@ const OPTIONS: { kind: ExportKind; label: string }[] = [
   { kind: "transactions", label: "Transactions" },
   { kind: "budgets", label: "Budgets" },
   { kind: "goals", label: "Savings Goals" },
+  { kind: "jars", label: "Saving Jars" },
   { kind: "subscriptions", label: "Subscriptions" },
   { kind: "analytics", label: "Analytics Report" },
   { kind: "full", label: "Full Data Export" },
@@ -24,6 +25,7 @@ export function ExportMenu({ data, currency }: { data: FinanceData; currency: st
         transactions: data.transactions,
         budgets: data.budgets,
         goals: data.goals,
+        jars: data.jars,
         subscriptions: data.subscriptions,
         currency,
       });

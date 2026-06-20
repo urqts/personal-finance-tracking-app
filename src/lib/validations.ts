@@ -97,3 +97,10 @@ export const jarMovementSchema = z.object({
 
 export type JarInput = z.infer<typeof jarSchema>;
 export type JarMovementInput = z.infer<typeof jarMovementSchema>;
+
+export const jarCategorySchema = z.object({
+  name: z.string().min(1, "Name is required").max(60),
+  color: z.string().regex(/^#([0-9a-fA-F]{6})$/, "Invalid color"),
+  icon: z.string().min(1),
+});
+export type JarCategoryInput = z.infer<typeof jarCategorySchema>;

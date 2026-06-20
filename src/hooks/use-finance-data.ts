@@ -6,8 +6,9 @@ import { listCategories } from "@/services/categories";
 import { listBudgets } from "@/services/budgets";
 import { listGoals } from "@/services/goals";
 import { listJars } from "@/services/jars";
+import { listJarCategories } from "@/services/jar-categories";
 import { listSubscriptions } from "@/services/subscriptions";
-import type { TransactionWithCategory, Category, Budget, SavingsGoal, SavingJarWithCategory, Subscription } from "@/types";
+import type { TransactionWithCategory, Category, Budget, SavingsGoal, SavingJarWithCategory, JarCategory, Subscription } from "@/types";
 
 export interface FinanceData {
   transactions: TransactionWithCategory[];
@@ -15,10 +16,11 @@ export interface FinanceData {
   budgets: Budget[];
   goals: SavingsGoal[];
   jars: SavingJarWithCategory[];
+  jarCategories: JarCategory[];
   subscriptions: Subscription[];
 }
 
-const empty: FinanceData = { transactions: [], categories: [], budgets: [], goals: [], jars: [], subscriptions: [] };
+const empty: FinanceData = { transactions: [], categories: [], budgets: [], goals: [], jars: [], jarCategories: [], subscriptions: [] };
 
 function pick<T>(r: PromiseSettledResult<T[]>): T[] {
   return r.status === "fulfilled" ? r.value : [];
@@ -33,12 +35,13 @@ export function useFinanceData() {
     setLoading(true);
     // Resilient: a single failing source (e.g. a table not migrated yet) must not
     // wipe out everything else — load each independently.
-    const [transactions, categories, budgets, goals, jars, subscriptions] = await Promise.allSettled([
+    const [transactions, categories, budgets, goals, jars, jarCategories, subscriptions] = await Promise.allSettled([
       listAllTransactions(),
       listCategories(),
       listBudgets(),
       listGoals(),
       listJars(),
+      listJarCategories(),
       listSubscriptions(),
     ]);
 
@@ -48,10 +51,11 @@ export function useFinanceData() {
       budgets: pick(budgets),
       goals: pick(goals),
       jars: pick(jars),
+      jarCategories: pick(jarCategories),
       subscriptions: pick(subscriptions),
     });
 
-    const failures = [transactions, categories, budgets, goals, jars, subscriptions]
+    const failures = [transactions, categories, budgets, goals, jars, jarCategories, subscriptions]
       .filter((r): r is PromiseRejectedResult => r.status === "rejected");
     if (failures.length > 0) {
       const reason = failures[0].reason;

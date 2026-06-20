@@ -99,6 +99,14 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      jar_categories: {
+        Row: {
+          id: string; user_id: string; name: string; color: string; icon: string; is_default: boolean;
+        } & Timestamps;
+        Insert: { user_id: string; name: string } & Partial<{ color: string; icon: string; is_default: boolean }>;
+        Update: Partial<{ name: string; color: string; icon: string }>;
+        Relationships: [];
+      };
       saving_jars: {
         Row: {
           id: string; user_id: string; name: string; category_id: string | null;

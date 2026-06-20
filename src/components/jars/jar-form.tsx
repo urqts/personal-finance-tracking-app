@@ -11,10 +11,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { jarSchema, type JarInput } from "@/lib/validations";
 import { createJar, updateJar } from "@/services/jars";
 import { useUser } from "@/hooks/use-user";
-import type { SavingJar, Category } from "@/types";
+import type { SavingJar, JarCategory } from "@/types";
 
 export function JarForm({ open, onOpenChange, jar, categories, onSaved }: {
-  open: boolean; onOpenChange: (o: boolean) => void; jar?: SavingJar | null; categories: Category[]; onSaved: () => void;
+  open: boolean; onOpenChange: (o: boolean) => void; jar?: SavingJar | null; categories: JarCategory[]; onSaved: () => void;
 }) {
   const { user } = useUser();
   const editing = !!jar;

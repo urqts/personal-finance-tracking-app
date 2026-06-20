@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, Pencil, Trash2, ArrowDownToLine, ArrowUpFromLine, CheckCircle2 } from "lucide-react";
+import { Plus, Pencil, Trash2, ArrowDownToLine, ArrowUpFromLine, CheckCircle2, Tags } from "lucide-react";
 import { toast } from "sonner";
 import { Topbar } from "@/components/layout/topbar";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Icon } from "@/components/shared/icon";
 import { JarForm } from "@/components/jars/jar-form";
+import { JarCategoryManager } from "@/components/jars/jar-category-manager";
 import { JarMovementDialog } from "@/components/jars/jar-movement-dialog";
 import { CategorySummary } from "@/components/jars/category-summary";
 import { useFinanceData } from "@/hooks/use-finance-data";
@@ -28,6 +29,7 @@ export default function JarsPage() {
   const [editing, setEditing] = useState<SavingJarWithCategory | null>(null);
   const [moveJar, setMoveJar] = useState<SavingJarWithCategory | null>(null);
   const [moveMode, setMoveMode] = useState<"deposit" | "withdraw">("deposit");
+  const [manageOpen, setManageOpen] = useState(false);
 
   const summaries = useMemo(() => jarCategorySummaries(data.jars), [data.jars]);
   const saved = useMemo(() => totalSaved(data.jars), [data.jars]);
@@ -56,7 +58,10 @@ export default function JarsPage() {
               <p className="text-2xl font-semibold">{formatCurrency(targetTotal, currency, locale)}</p>
             </div>
           </div>
-          <Button size="sm" onClick={() => { setEditing(null); setFormOpen(true); }}><Plus className="h-4 w-4" /> New jar</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setManageOpen(true)}><Tags className="h-4 w-4" /> Categories</Button>
+            <Button size="sm" onClick={() => { setEditing(null); setFormOpen(true); }}><Plus className="h-4 w-4" /> New jar</Button>
+          </div>
         </div>
 
         {!loading && summaries.length > 0 && (
@@ -116,7 +121,7 @@ export default function JarsPage() {
         </section>
       </main>
 
-      <JarForm open={formOpen} onOpenChange={setFormOpen} jar={editing} categories={data.categories} onSaved={reload} />
+      <JarForm open={formOpen} onOpenChange={setFormOpen} jar={editing} categories={data.jarCategories} onSaved={reload} />
       <JarMovementDialog
         open={!!moveJar}
         onOpenChange={(o) => { if (!o) setMoveJar(null); }}
@@ -126,6 +131,7 @@ export default function JarsPage() {
         locale={locale}
         onDone={reload}
       />
+      <JarCategoryManager open={manageOpen} onOpenChange={setManageOpen} categories={data.jarCategories} onChanged={reload} />
     </>
   );
 }

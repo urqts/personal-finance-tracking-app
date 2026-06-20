@@ -3,7 +3,7 @@ import { toError } from "@/lib/utils";
 import type { SavingJarWithCategory, JarTransaction } from "@/types";
 import type { JarInput } from "@/lib/validations";
 
-const SELECT = "*, category:categories(*)";
+const SELECT = "*, category:jar_categories(*)";
 
 export async function listJars(): Promise<SavingJarWithCategory[]> {
   const supabase = createClient();
@@ -57,7 +57,7 @@ export async function depositToJar(jar: SavingJarWithCategory, amount: number, n
       description: note || null,
       amount,
       type: "expense",
-      category_id: jar.category_id,
+      category_id: null,
       tags: ["saving-jar"],
       is_transfer: true,
       occurred_on: today(),
@@ -91,7 +91,7 @@ export async function withdrawFromJar(jar: SavingJarWithCategory, amount: number
       description: note || null,
       amount,
       type: "income",
-      category_id: jar.category_id,
+      category_id: null,
       tags: ["saving-jar"],
       is_transfer: true,
       occurred_on: today(),

@@ -13,6 +13,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Icon } from "@/components/shared/icon";
 import { JarForm } from "@/components/jars/jar-form";
 import { JarCategoryManager } from "@/components/jars/jar-category-manager";
+import { AutoSaveCard } from "@/components/jars/auto-save-card";
 import { JarMovementDialog } from "@/components/jars/jar-movement-dialog";
 import { CategorySummary } from "@/components/jars/category-summary";
 import { useFinanceData } from "@/hooks/use-finance-data";
@@ -63,6 +64,8 @@ export default function JarsPage() {
             <Button size="sm" onClick={() => { setEditing(null); setFormOpen(true); }}><Plus className="h-4 w-4" /> New jar</Button>
           </div>
         </div>
+
+        {!loading && <AutoSaveCard jars={data.jars} onRan={reload} />}
 
         {!loading && summaries.length > 0 && (
           <section className="space-y-3">

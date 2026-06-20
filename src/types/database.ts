@@ -99,6 +99,16 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      auto_save_settings: {
+        Row: {
+          user_id: string; is_enabled: boolean; jar_id: string | null;
+          mode: "full" | "percentage" | "fixed"; percentage: number;
+          fixed_amount: number; last_run_month: string | null;
+        } & Timestamps;
+        Insert: { user_id: string } & Partial<{ is_enabled: boolean; jar_id: string | null; mode: "full" | "percentage" | "fixed"; percentage: number; fixed_amount: number; last_run_month: string | null }>;
+        Update: Partial<{ is_enabled: boolean; jar_id: string | null; mode: "full" | "percentage" | "fixed"; percentage: number; fixed_amount: number; last_run_month: string | null }>;
+        Relationships: [];
+      };
       jar_categories: {
         Row: {
           id: string; user_id: string; name: string; color: string; icon: string; is_default: boolean;

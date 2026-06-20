@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/components/layout/sidebar";
+import { AutoSaveRunner } from "@/components/jars/auto-save-runner";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -11,6 +12,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <div className="min-h-screen bg-background">
       <Sidebar />
       <div className="md:pl-64">{children}</div>
+      <AutoSaveRunner />
     </div>
   );
 }

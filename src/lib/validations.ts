@@ -104,3 +104,12 @@ export const jarCategorySchema = z.object({
   icon: z.string().min(1),
 });
 export type JarCategoryInput = z.infer<typeof jarCategorySchema>;
+
+export const autoSaveSchema = z.object({
+  is_enabled: z.boolean().default(false),
+  jar_id: z.string().uuid("Select a jar").nullable(),
+  mode: z.enum(["full", "percentage", "fixed"]).default("full"),
+  percentage: z.coerce.number().min(0).max(100).default(100),
+  fixed_amount: z.coerce.number().min(0).default(0),
+});
+export type AutoSaveInput = z.infer<typeof autoSaveSchema>;

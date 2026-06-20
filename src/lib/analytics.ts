@@ -153,3 +153,15 @@ export function jarsOverallProgress(jars: SavingJar[]): number {
   if (jars.length === 0) return 0;
   return (sum(jars.map((j) => (j.target_amount > 0 ? Math.min(Number(j.current_amount) / Number(j.target_amount), 1) : 0))) / jars.length) * 100;
 }
+
+/** Remaining balance (income - expenses, excluding transfers) for a given month. */
+export function monthRemaining(all: Transaction[], month: Date): number {
+  const txns = all.filter((t) => !t.is_transfer);
+  const inM = txns.filter((t) => {
+    const d = parseISO(t.occurred_on);
+    return d.getFullYear() === month.getFullYear() && d.getMonth() === month.getMonth();
+  });
+  const income = sum(inM.filter((t) => t.type === "income").map((t) => Number(t.amount)));
+  const expenses = sum(inM.filter((t) => t.type === "expense").map((t) => Number(t.amount)));
+  return income - expenses;
+}

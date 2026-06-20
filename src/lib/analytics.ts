@@ -2,7 +2,7 @@ import { format, parseISO, startOfMonth, subMonths, isWithinInterval, startOfYea
 import type {
   Transaction, TransactionWithCategory, Category, Subscription,
   DashboardSummary, MonthlyTrendPoint, CategoryBreakdownPoint, BillingCycle,
-  SavingJar, JarCategorySummary, JarCategory,
+  SavingJar, SavingJarWithCategory, JarCategorySummary,
 } from "@/types";
 import { BILLING_CYCLES } from "./constants";
 
@@ -21,10 +21,11 @@ export function inMonth(tx: Transaction, ref = new Date()): boolean {
 }
 
 export function computeSummary(
-  txns: Transaction[],
+  all: Transaction[],
   monthlyBudgetTotal: number,
   ref = new Date()
 ): DashboardSummary {
+  const txns = all.filter((t) => !t.is_transfer);
   const income = sum(txns.filter((t) => t.type === "income").map((t) => Number(t.amount)));
   const expenses = sum(txns.filter((t) => t.type === "expense").map((t) => Number(t.amount)));
   const totalBalance = income - expenses;
@@ -39,7 +40,8 @@ export function computeSummary(
   return { totalBalance, monthlyIncome, monthlyExpenses, savingsRate, budgetUtilization };
 }
 
-export function monthlyTrend(txns: Transaction[], months = 6, ref = new Date()): MonthlyTrendPoint[] {
+export function monthlyTrend(all: Transaction[], months = 6, ref = new Date()): MonthlyTrendPoint[] {
+  const txns = all.filter((t) => !t.is_transfer);
   const points: MonthlyTrendPoint[] = [];
   for (let i = months - 1; i >= 0; i--) {
     const m = startOfMonth(subMonths(ref, i));
@@ -59,7 +61,7 @@ export function categoryBreakdown(
   type: "income" | "expense" = "expense"
 ): CategoryBreakdownPoint[] {
   const map = new Map<string, CategoryBreakdownPoint>();
-  for (const t of txns.filter((x) => x.type === type)) {
+  for (const t of txns.filter((x) => x.type === type && !x.is_transfer)) {
     const id = t.category?.id ?? "uncategorized";
     const existing = map.get(id);
     const amount = Number(t.amount);
@@ -95,7 +97,7 @@ export function subscriptionMonthlyTotal(subs: Subscription[]): number {
 export function yearlyTotals(txns: Transaction[], ref = new Date()) {
   const start = startOfYear(ref);
   const end = endOfYear(ref);
-  const yearTx = txns.filter((t) => isWithinInterval(parseISO(t.occurred_on), { start, end }));
+  const yearTx = txns.filter((t) => !t.is_transfer && isWithinInterval(parseISO(t.occurred_on), { start, end }));
   const income = sum(yearTx.filter((t) => t.type === "income").map((t) => Number(t.amount)));
   const expenses = sum(yearTx.filter((t) => t.type === "expense").map((t) => Number(t.amount)));
   return { income, expenses, net: income - expenses };
@@ -117,32 +119,20 @@ export function financialHealthScore(opts: {
 }
 
 
-const JAR_LABELS: Record<JarCategory, { label: string; color: string }> = {
-  emergency: { label: "Emergency", color: "#ef4444" },
-  travel: { label: "Travel", color: "#0ea5e9" },
-  home: { label: "Home", color: "#f97316" },
-  education: { label: "Education", color: "#6366f1" },
-  gadgets: { label: "Gadgets", color: "#8b5cf6" },
-  vehicle: { label: "Vehicle", color: "#14b8a6" },
-  health: { label: "Health", color: "#06b6d4" },
-  gifts: { label: "Gifts", color: "#ec4899" },
-  other: { label: "Other", color: "#64748b" },
-};
-
-export function jarCategorySummaries(jars: SavingJar[]): JarCategorySummary[] {
-  const map = new Map<JarCategory, JarCategorySummary>();
+export function jarCategorySummaries(jars: SavingJarWithCategory[]): JarCategorySummary[] {
+  const map = new Map<string, JarCategorySummary>();
   for (const jar of jars) {
-    const meta = JAR_LABELS[jar.category];
-    const existing = map.get(jar.category);
+    const id = jar.category?.id ?? "uncategorized";
+    const existing = map.get(id);
     if (existing) {
       existing.jarCount += 1;
       existing.saved += Number(jar.current_amount);
       existing.target += Number(jar.target_amount);
     } else {
-      map.set(jar.category, {
-        category: jar.category,
-        label: meta.label,
-        color: meta.color,
+      map.set(id, {
+        categoryId: id,
+        label: jar.category?.name ?? "Uncategorized",
+        color: jar.category?.color ?? "#94a3b8",
         jarCount: 1,
         saved: Number(jar.current_amount),
         target: Number(jar.target_amount),

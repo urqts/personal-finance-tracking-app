@@ -50,14 +50,3 @@ export const NAV_ITEMS = [
 
 export const CURRENCIES = ["USD", "EUR", "GBP", "JPY", "CAD", "AUD", "INR", "THB", "SGD"];
 
-export const JAR_CATEGORIES: { value: import("@/types").JarCategory; label: string; color: string; icon: string }[] = [
-  { value: "emergency", label: "Emergency", color: "#ef4444", icon: "shield" },
-  { value: "travel", label: "Travel", color: "#0ea5e9", icon: "plane" },
-  { value: "home", label: "Home", color: "#f97316", icon: "home" },
-  { value: "education", label: "Education", color: "#6366f1", icon: "graduation-cap" },
-  { value: "gadgets", label: "Gadgets", color: "#8b5cf6", icon: "smartphone" },
-  { value: "vehicle", label: "Vehicle", color: "#14b8a6", icon: "car" },
-  { value: "health", label: "Health", color: "#06b6d4", icon: "heart-pulse" },
-  { value: "gifts", label: "Gifts", color: "#ec4899", icon: "gift" },
-  { value: "other", label: "Other", color: "#64748b", icon: "piggy-bank" },
-];

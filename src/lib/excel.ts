@@ -1,6 +1,6 @@
 import ExcelJS from "exceljs";
 import type {
-  TransactionWithCategory, Budget, SavingsGoal, SavingJar, Subscription,
+  TransactionWithCategory, Budget, SavingsGoal, SavingJarWithCategory, Subscription,
 } from "@/types";
 import { monthlyTrend, categoryBreakdown, subscriptionMonthlyTotal } from "./analytics";
 
@@ -48,7 +48,7 @@ export interface ExportPayload {
   transactions?: TransactionWithCategory[];
   budgets?: Budget[];
   goals?: SavingsGoal[];
-  jars?: SavingJar[];
+  jars?: SavingJarWithCategory[];
   subscriptions?: Subscription[];
   currency?: string;
 }
@@ -106,7 +106,7 @@ function sheetGoals(wb: ExcelJS.Workbook, goals: SavingsGoal[]) {
   ws.getColumn(3).numFmt = "#,##0.00";
 }
 
-function sheetJars(wb: ExcelJS.Workbook, jars: SavingJar[]) {
+function sheetJars(wb: ExcelJS.Workbook, jars: SavingJarWithCategory[]) {
   const ws = wb.addWorksheet("Saving Jars");
   addTable(
     ws,
@@ -114,7 +114,7 @@ function sheetJars(wb: ExcelJS.Workbook, jars: SavingJar[]) {
     ["Name", "Category", "Target", "Saved", "Progress %", "Funded"],
     jars.map((j) => [
       j.name,
-      j.category,
+      j.category?.name ?? "Uncategorized",
       Number(j.target_amount),
       Number(j.current_amount),
       j.target_amount > 0 ? Math.round((Number(j.current_amount) / Number(j.target_amount)) * 100) : 0,

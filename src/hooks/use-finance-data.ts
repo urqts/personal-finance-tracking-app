@@ -7,18 +7,22 @@ import { listBudgets } from "@/services/budgets";
 import { listGoals } from "@/services/goals";
 import { listJars } from "@/services/jars";
 import { listSubscriptions } from "@/services/subscriptions";
-import type { TransactionWithCategory, Category, Budget, SavingsGoal, SavingJar, Subscription } from "@/types";
+import type { TransactionWithCategory, Category, Budget, SavingsGoal, SavingJarWithCategory, Subscription } from "@/types";
 
 export interface FinanceData {
   transactions: TransactionWithCategory[];
   categories: Category[];
   budgets: Budget[];
   goals: SavingsGoal[];
-  jars: SavingJar[];
+  jars: SavingJarWithCategory[];
   subscriptions: Subscription[];
 }
 
 const empty: FinanceData = { transactions: [], categories: [], budgets: [], goals: [], jars: [], subscriptions: [] };
+
+function pick<T>(r: PromiseSettledResult<T[]>): T[] {
+  return r.status === "fulfilled" ? r.value : [];
+}
 
 export function useFinanceData() {
   const [data, setData] = useState<FinanceData>(empty);
@@ -26,23 +30,36 @@ export function useFinanceData() {
   const [error, setError] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
-    try {
-      setLoading(true);
-      const [transactions, categories, budgets, goals, jars, subscriptions] = await Promise.all([
-        listAllTransactions(),
-        listCategories(),
-        listBudgets(),
-        listGoals(),
-        listJars(),
-        listSubscriptions(),
-      ]);
-      setData({ transactions, categories, budgets, goals, jars, subscriptions });
+    setLoading(true);
+    // Resilient: a single failing source (e.g. a table not migrated yet) must not
+    // wipe out everything else — load each independently.
+    const [transactions, categories, budgets, goals, jars, subscriptions] = await Promise.allSettled([
+      listAllTransactions(),
+      listCategories(),
+      listBudgets(),
+      listGoals(),
+      listJars(),
+      listSubscriptions(),
+    ]);
+
+    setData({
+      transactions: pick(transactions),
+      categories: pick(categories),
+      budgets: pick(budgets),
+      goals: pick(goals),
+      jars: pick(jars),
+      subscriptions: pick(subscriptions),
+    });
+
+    const failures = [transactions, categories, budgets, goals, jars, subscriptions]
+      .filter((r): r is PromiseRejectedResult => r.status === "rejected");
+    if (failures.length > 0) {
+      const reason = failures[0].reason;
+      setError(reason instanceof Error ? reason.message : "Some data could not be loaded.");
+    } else {
       setError(null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load data");
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   }, []);
 
   useEffect(() => {

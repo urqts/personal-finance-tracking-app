@@ -1,4 +1,4 @@
-import type { Database, TransactionType, RecurrenceInterval, BillingCycle, BudgetPeriod, JarCategory, JarMovement } from "./database";
+import type { Database, TransactionType, RecurrenceInterval, BillingCycle, BudgetPeriod, JarMovement } from "./database";
 
 type T = Database["public"]["Tables"];
 
@@ -11,14 +11,15 @@ export type BudgetCategory = T["budget_categories"]["Row"];
 export type SavingsGoal = T["savings_goals"]["Row"];
 export type SavingJar = T["saving_jars"]["Row"];
 export type JarTransaction = T["jar_transactions"]["Row"];
+export type SavingJarWithCategory = SavingJar & { category: Category | null };
 export type Subscription = T["subscriptions"]["Row"];
 export type Report = T["reports"]["Row"];
 export type AuditLog = T["audit_logs"]["Row"];
 
-export type { TransactionType, RecurrenceInterval, BillingCycle, BudgetPeriod, JarCategory, JarMovement };
+export type { TransactionType, RecurrenceInterval, BillingCycle, BudgetPeriod, JarMovement };
 
 export interface JarCategorySummary {
-  category: JarCategory;
+  categoryId: string;
   label: string;
   color: string;
   jarCount: number;

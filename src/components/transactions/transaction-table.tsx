@@ -86,6 +86,7 @@ export function TransactionTable({ transactions, currency, locale, selected, onS
                     <p className="font-medium">{t.title}</p>
                     {t.description && <p className="text-xs text-muted-foreground">{t.description}</p>}
                   </div>
+                  {t.is_transfer && <Badge variant="secondary" className="ml-1">Transfer</Badge>}
                   {t.is_recurring && <Badge variant="outline" className="ml-1">Recurring</Badge>}
                 </div>
               </TableCell>

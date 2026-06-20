@@ -6,6 +6,7 @@ import type { Database } from "@/types/database";
 
 type TxInsert = Database["public"]["Tables"]["transactions"]["Insert"];
 import type { TransactionInput } from "@/lib/validations";
+import { toError } from "@/lib/utils";
 
 const TABLE = "transactions";
 const SELECT = "*, category:categories(*)";
@@ -34,14 +35,14 @@ export async function listTransactions(opts?: {
   query = query.range(page * pageSize, page * pageSize + pageSize - 1);
 
   const { data, error, count } = await query;
-  if (error) throw error;
+  if (error) throw toError(error);
   return { data: (data as unknown as TransactionWithCategory[]) ?? [], count: count ?? 0 };
 }
 
 export async function listAllTransactions(): Promise<TransactionWithCategory[]> {
   const supabase = createClient();
   const { data, error } = await supabase.from(TABLE).select(SELECT).order("occurred_on", { ascending: false });
-  if (error) throw error;
+  if (error) throw toError(error);
   return (data as unknown as TransactionWithCategory[]) ?? [];
 }
 
@@ -52,33 +53,33 @@ export async function createTransaction(input: TransactionInput, userId: string)
     .insert({ ...normalize(input), user_id: userId })
     .select()
     .single();
-  if (error) throw error;
+  if (error) throw toError(error);
   return data as Transaction;
 }
 
 export async function updateTransaction(id: string, input: TransactionInput): Promise<Transaction> {
   const supabase = createClient();
   const { data, error } = await supabase.from(TABLE).update(normalize(input)).eq("id", id).select().single();
-  if (error) throw error;
+  if (error) throw toError(error);
   return data as Transaction;
 }
 
 export async function deleteTransaction(id: string): Promise<void> {
   const supabase = createClient();
   const { error } = await supabase.from(TABLE).delete().eq("id", id);
-  if (error) throw error;
+  if (error) throw toError(error);
 }
 
 export async function bulkDelete(ids: string[]): Promise<void> {
   const supabase = createClient();
   const { error } = await supabase.from(TABLE).delete().in("id", ids);
-  if (error) throw error;
+  if (error) throw toError(error);
 }
 
 export async function bulkUpdateCategory(ids: string[], categoryId: string | null): Promise<void> {
   const supabase = createClient();
   const { error } = await supabase.from(TABLE).update({ category_id: categoryId }).in("id", ids);
-  if (error) throw error;
+  if (error) throw toError(error);
 }
 
 export async function duplicateTransaction(tx: Transaction, userId: string): Promise<Transaction> {
@@ -90,14 +91,14 @@ export async function duplicateTransaction(tx: Transaction, userId: string): Pro
     .insert({ ...rest, user_id: userId, title: `${tx.title} (copy)` })
     .select()
     .single();
-  if (error) throw error;
+  if (error) throw toError(error);
   return data as Transaction;
 }
 
 export async function bulkInsert(rows: TxInsert[]): Promise<number> {
   const supabase = createClient();
   const { data, error } = await supabase.from(TABLE).insert(rows).select("id");
-  if (error) throw error;
+  if (error) throw toError(error);
   return data?.length ?? 0;
 }
 

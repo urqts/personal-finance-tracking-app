@@ -1,12 +1,15 @@
 import { createClient } from "@/lib/supabase/client";
-import type { SavingJar, JarTransaction } from "@/types";
+import { toError } from "@/lib/utils";
+import type { SavingJarWithCategory, JarTransaction } from "@/types";
 import type { JarInput } from "@/lib/validations";
 
-export async function listJars(): Promise<SavingJar[]> {
+const SELECT = "*, category:categories(*)";
+
+export async function listJars(): Promise<SavingJarWithCategory[]> {
   const supabase = createClient();
-  const { data, error } = await supabase.from("saving_jars").select("*").order("created_at", { ascending: false });
-  if (error) throw error;
-  return data ?? [];
+  const { data, error } = await supabase.from("saving_jars").select(SELECT).order("created_at", { ascending: false });
+  if (error) throw toError(error);
+  return (data as unknown as SavingJarWithCategory[]) ?? [];
 }
 
 export async function listJarTransactions(jarId: string): Promise<JarTransaction[]> {
@@ -16,37 +19,35 @@ export async function listJarTransactions(jarId: string): Promise<JarTransaction
     .select("*")
     .eq("jar_id", jarId)
     .order("created_at", { ascending: false });
-  if (error) throw error;
+  if (error) throw toError(error);
   return data ?? [];
 }
 
-export async function createJar(input: JarInput, userId: string): Promise<SavingJar> {
+export async function createJar(input: JarInput, userId: string): Promise<void> {
   const supabase = createClient();
-  const { data, error } = await supabase.from("saving_jars").insert({ ...input, user_id: userId }).select().single();
-  if (error) throw error;
-  return data;
+  const { error } = await supabase.from("saving_jars").insert({ ...input, user_id: userId });
+  if (error) throw toError(error);
 }
 
-export async function updateJar(id: string, input: Partial<JarInput>): Promise<SavingJar> {
+export async function updateJar(id: string, input: Partial<JarInput>): Promise<void> {
   const supabase = createClient();
-  const { data, error } = await supabase.from("saving_jars").update(input).eq("id", id).select().single();
-  if (error) throw error;
-  return data;
+  const { error } = await supabase.from("saving_jars").update(input).eq("id", id);
+  if (error) throw toError(error);
 }
 
 export async function deleteJar(id: string): Promise<void> {
   const supabase = createClient();
   const { error } = await supabase.from("saving_jars").delete().eq("id", id);
-  if (error) throw error;
+  if (error) throw toError(error);
 }
 
 const today = () => new Date().toISOString().slice(0, 10);
 
 /**
- * Deposit into a jar. Also posts an expense transaction to the main ledger
- * (money moved out of spendable balance into savings) and links the two.
+ * Deposit into a jar. Posts an expense transaction to the main ledger, tagged
+ * and categorised with the jar's own category, then records the jar movement.
  */
-export async function depositToJar(jar: SavingJar, amount: number, note: string, userId: string): Promise<void> {
+export async function depositToJar(jar: SavingJarWithCategory, amount: number, note: string, userId: string): Promise<void> {
   const supabase = createClient();
   const { data: tx, error: txErr } = await supabase
     .from("transactions")
@@ -56,13 +57,14 @@ export async function depositToJar(jar: SavingJar, amount: number, note: string,
       description: note || null,
       amount,
       type: "expense",
-      category_id: null,
-      tags: ["saving-jar", jar.category],
+      category_id: jar.category_id,
+      tags: ["saving-jar"],
+      is_transfer: true,
       occurred_on: today(),
     })
     .select("id")
     .single();
-  if (txErr) throw txErr;
+  if (txErr) throw toError(txErr);
 
   const { error } = await supabase.from("jar_transactions").insert({
     jar_id: jar.id,
@@ -72,14 +74,11 @@ export async function depositToJar(jar: SavingJar, amount: number, note: string,
     note: note || null,
     transaction_id: tx?.id ?? null,
   });
-  if (error) throw error;
+  if (error) throw toError(error);
 }
 
-/**
- * Withdraw from a jar. Also posts an income transaction to the main ledger
- * (money returned to spendable balance).
- */
-export async function withdrawFromJar(jar: SavingJar, amount: number, note: string, userId: string): Promise<void> {
+/** Withdraw from a jar. Posts an income transaction to the main ledger. */
+export async function withdrawFromJar(jar: SavingJarWithCategory, amount: number, note: string, userId: string): Promise<void> {
   if (amount > Number(jar.current_amount)) {
     throw new Error("Cannot withdraw more than the jar balance");
   }
@@ -92,13 +91,14 @@ export async function withdrawFromJar(jar: SavingJar, amount: number, note: stri
       description: note || null,
       amount,
       type: "income",
-      category_id: null,
-      tags: ["saving-jar", jar.category],
+      category_id: jar.category_id,
+      tags: ["saving-jar"],
+      is_transfer: true,
       occurred_on: today(),
     })
     .select("id")
     .single();
-  if (txErr) throw txErr;
+  if (txErr) throw toError(txErr);
 
   const { error } = await supabase.from("jar_transactions").insert({
     jar_id: jar.id,
@@ -108,5 +108,5 @@ export async function withdrawFromJar(jar: SavingJar, amount: number, note: stri
     note: note || null,
     transaction_id: tx?.id ?? null,
   });
-  if (error) throw error;
+  if (error) throw toError(error);
 }

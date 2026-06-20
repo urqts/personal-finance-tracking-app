@@ -12,10 +12,10 @@ import { jarMovementSchema, type JarMovementInput } from "@/lib/validations";
 import { depositToJar, withdrawFromJar, listJarTransactions } from "@/services/jars";
 import { useUser } from "@/hooks/use-user";
 import { formatCurrency, formatDate } from "@/lib/format";
-import type { SavingJar, JarTransaction } from "@/types";
+import type { SavingJarWithCategory, JarTransaction } from "@/types";
 
 export function JarMovementDialog({ open, onOpenChange, jar, mode, currency, locale, onDone }: {
-  open: boolean; onOpenChange: (o: boolean) => void; jar: SavingJar | null;
+  open: boolean; onOpenChange: (o: boolean) => void; jar: SavingJarWithCategory | null;
   mode: "deposit" | "withdraw"; currency: string; locale: string; onDone: () => void;
 }) {
   const { user } = useUser();

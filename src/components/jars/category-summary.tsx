@@ -11,7 +11,7 @@ export function CategorySummary({ summaries, currency, locale }: {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {summaries.map((s) => (
-        <Card key={s.category}>
+        <Card key={s.categoryId}>
           <CardContent className="space-y-2 p-4">
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-2 text-sm font-medium">

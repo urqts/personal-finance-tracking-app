@@ -33,7 +33,7 @@ export default function BudgetsPage() {
   const [editing, setEditing] = useState<Budget | null>(null);
 
   const spent = useMemo(
-    () => data.transactions.filter((t) => t.type === "expense" && inMonth(t)).reduce((a, t) => a + Number(t.amount), 0),
+    () => data.transactions.filter((t) => t.type === "expense" && !t.is_transfer && inMonth(t)).reduce((a, t) => a + Number(t.amount), 0),
     [data.transactions]
   );
 

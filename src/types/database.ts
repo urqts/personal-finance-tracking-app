@@ -3,7 +3,6 @@ export type TransactionType = "income" | "expense";
 export type RecurrenceInterval = "none" | "daily" | "weekly" | "monthly" | "yearly";
 export type BillingCycle = "weekly" | "monthly" | "quarterly" | "yearly";
 export type BudgetPeriod = "monthly" | "yearly";
-export type JarCategory = "emergency" | "travel" | "home" | "education" | "gadgets" | "vehicle" | "health" | "gifts" | "other";
 export type JarMovement = "deposit" | "withdraw";
 
 type Timestamps = { created_at: string; updated_at: string };
@@ -41,14 +40,14 @@ export interface Database {
           description: string | null; notes: string | null; amount: number;
           type: TransactionType; tags: string[]; occurred_on: string;
           is_recurring: boolean; recurrence: RecurrenceInterval;
-          recurrence_end: string | null; parent_id: string | null;
+          recurrence_end: string | null; parent_id: string | null; is_transfer: boolean;
         } & Timestamps;
         Insert: {
           user_id: string; title: string; amount: number; type: TransactionType;
         } & Partial<{
           category_id: string | null; description: string | null; notes: string | null;
           tags: string[]; occurred_on: string; is_recurring: boolean;
-          recurrence: RecurrenceInterval; recurrence_end: string | null; parent_id: string | null;
+          recurrence: RecurrenceInterval; recurrence_end: string | null; parent_id: string | null; is_transfer: boolean;
         }>;
         Update: Partial<Database["public"]["Tables"]["transactions"]["Insert"]>;
         Relationships: [];
@@ -102,12 +101,12 @@ export interface Database {
       };
       saving_jars: {
         Row: {
-          id: string; user_id: string; name: string; category: JarCategory;
+          id: string; user_id: string; name: string; category_id: string | null;
           target_amount: number; current_amount: number; color: string;
           icon: string; is_completed: boolean;
         } & Timestamps;
-        Insert: { user_id: string; name: string; target_amount: number } & Partial<{ category: JarCategory; current_amount: number; color: string; icon: string; is_completed: boolean }>;
-        Update: Partial<{ name: string; category: JarCategory; target_amount: number; current_amount: number; color: string; icon: string; is_completed: boolean }>;
+        Insert: { user_id: string; name: string; target_amount: number } & Partial<{ category_id: string | null; current_amount: number; color: string; icon: string; is_completed: boolean }>;
+        Update: Partial<{ name: string; category_id: string | null; target_amount: number; current_amount: number; color: string; icon: string; is_completed: boolean }>;
         Relationships: [];
       };
       jar_transactions: {
@@ -128,7 +127,6 @@ export interface Database {
       recurrence_interval: RecurrenceInterval;
       billing_cycle: BillingCycle;
       budget_period: BudgetPeriod;
-      jar_category: JarCategory;
       jar_movement: JarMovement;
     };
   };

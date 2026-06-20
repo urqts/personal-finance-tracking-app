@@ -82,13 +82,9 @@ export type SavingsGoalInput = z.infer<typeof savingsGoalSchema>;
 export type SubscriptionInput = z.infer<typeof subscriptionSchema>;
 export type PreferencesInput = z.infer<typeof preferencesSchema>;
 
-export const jarCategorySchema = z.enum([
-  "emergency", "travel", "home", "education", "gadgets", "vehicle", "health", "gifts", "other",
-]);
-
 export const jarSchema = z.object({
   name: z.string().min(1, "Name is required").max(80),
-  category: jarCategorySchema.default("other"),
+  category_id: z.string().uuid("Select a category"),
   target_amount: z.coerce.number().positive("Target must be greater than 0"),
   color: z.string().regex(/^#([0-9a-fA-F]{6})$/).default("#6366f1"),
   icon: z.string().default("piggy-bank"),

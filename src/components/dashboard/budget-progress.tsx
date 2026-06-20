@@ -10,7 +10,7 @@ import { inMonth } from "@/lib/analytics";
 export function BudgetProgress({ budgets, transactions, currency, locale }: {
   budgets: Budget[]; transactions: Transaction[]; currency: string; locale: string;
 }) {
-  const monthExpenses = transactions.filter((t) => t.type === "expense" && inMonth(t));
+  const monthExpenses = transactions.filter((t) => t.type === "expense" && !t.is_transfer && inMonth(t));
   const spent = monthExpenses.reduce((a, t) => a + Number(t.amount), 0);
 
   return (

@@ -19,23 +19,21 @@ import { usePreferences } from "@/hooks/use-preferences";
 import { deleteJar } from "@/services/jars";
 import { jarCategorySummaries, totalSaved } from "@/lib/analytics";
 import { formatCurrency } from "@/lib/format";
-import { JAR_CATEGORIES } from "@/lib/constants";
-import type { SavingJar } from "@/types";
+import type { SavingJarWithCategory } from "@/types";
 
 export default function JarsPage() {
   const { data, loading, reload } = useFinanceData();
   const { currency, locale } = usePreferences();
   const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState<SavingJar | null>(null);
-  const [moveJar, setMoveJar] = useState<SavingJar | null>(null);
+  const [editing, setEditing] = useState<SavingJarWithCategory | null>(null);
+  const [moveJar, setMoveJar] = useState<SavingJarWithCategory | null>(null);
   const [moveMode, setMoveMode] = useState<"deposit" | "withdraw">("deposit");
 
   const summaries = useMemo(() => jarCategorySummaries(data.jars), [data.jars]);
   const saved = useMemo(() => totalSaved(data.jars), [data.jars]);
   const targetTotal = useMemo(() => data.jars.reduce((a, j) => a + Number(j.target_amount), 0), [data.jars]);
-  const catMeta = (c: string) => JAR_CATEGORIES.find((x) => x.value === c);
 
-  function openMovement(jar: SavingJar, mode: "deposit" | "withdraw") {
+  function openMovement(jar: SavingJarWithCategory, mode: "deposit" | "withdraw") {
     setMoveJar(jar); setMoveMode(mode);
   }
   async function remove(id: string) {
@@ -79,7 +77,6 @@ export default function JarsPage() {
               {data.jars.map((jar) => {
                 const pct = jar.target_amount > 0 ? Math.min((Number(jar.current_amount) / Number(jar.target_amount)) * 100, 100) : 0;
                 const done = Number(jar.current_amount) >= Number(jar.target_amount);
-                const meta = catMeta(jar.category);
                 return (
                   <Card key={jar.id} className={done ? "border-emerald-500/40" : ""}>
                     <CardHeader className="flex-row items-start justify-between space-y-0">
@@ -89,7 +86,7 @@ export default function JarsPage() {
                         </span>
                         <div>
                           <CardTitle className="text-base">{jar.name}</CardTitle>
-                          <p className="text-xs text-muted-foreground">{meta?.label ?? jar.category}</p>
+                          <p className="text-xs text-muted-foreground">{jar.category?.name ?? "Uncategorized"}</p>
                         </div>
                       </div>
                       <div className="flex gap-1">
@@ -119,7 +116,7 @@ export default function JarsPage() {
         </section>
       </main>
 
-      <JarForm open={formOpen} onOpenChange={setFormOpen} jar={editing} onSaved={reload} />
+      <JarForm open={formOpen} onOpenChange={setFormOpen} jar={editing} categories={data.categories} onSaved={reload} />
       <JarMovementDialog
         open={!!moveJar}
         onOpenChange={(o) => { if (!o) setMoveJar(null); }}
